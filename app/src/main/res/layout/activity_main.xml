@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#000000"
+        tools:context=".MainActivity">
+
+    <android.support.v7.widget.RecyclerView
+            android:layout_width="match_parent"
+            tools:layout_editor_absoluteY="109dp"
+            android:id="@+id/recycle" app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" android:layout_height="655dp"
+            android:layout_marginTop="65dp"/>
+    <Spinner
+            android:layout_width="wrap_content"
+            android:layout_height="52dp"
+            tools:layout_editor_absoluteY="0dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:id="@+id/spinner"
+            android:backgroundTint="#00CDFF"
+            app:layout_constraintHorizontal_bias="0.0" android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true" android:layout_marginTop="10dp" android:layout_marginStart="116dp"
+            android:dropDownWidth="wrap_content" android:paddingLeft="5dp" android:paddingRight="5dp"/>
+    <Spinner
+            android:layout_width="wrap_content"
+            android:layout_height="52dp"
+            tools:layout_editor_absoluteY="0dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:id="@+id/sorter"
+            android:backgroundTint="#00CDFF"
+            app:layout_constraintHorizontal_bias="0.0"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="22dp" android:paddingRight="5dp" android:paddingLeft="5dp"
+            android:dropDownWidth="wrap_content"/>
+    <Button
+            android:text="Set Distance"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_marginStart="0dp"
+            android:layout_alignParentTop="true"
+            android:background="@drawable/round"
+            android:id="@+id/radius"
+            android:layout_marginTop="10dp" android:textSize="11sp"/>
+
+</RelativeLayout>
