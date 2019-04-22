@@ -1,7 +1,9 @@
 package com.mycode.restuarantapp
 
+import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.app.ProgressDialog
+import android.content.Context.LOCATION_SERVICE
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -14,6 +16,8 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
+import android.support.v4.content.ContextCompat.getSystemService
+import android.support.v4.content.ContextCompat.startActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
@@ -27,6 +31,9 @@ import com.mycode.restuarantapp.entities.PlacesResults
 import com.mycode.restuarantapp.entities.Result
 import com.mycode.restuarantapp.services.APIClient
 import com.mycode.restuarantapp.services.GoogleAPI
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.alert.view.*
 import kotlinx.android.synthetic.main.row_layout.*
@@ -36,6 +43,7 @@ import java.util.*
 
 class MainActivity : AppCompatActivity(),  RecyclerAdapter.OnItemClickListener {
     private lateinit var location : LocationManager
+    private var composite : CompositeDisposable = CompositeDisposable()
     private lateinit var recycl: RecyclerView
     private lateinit var adapter: RecyclerAdapter
     private lateinit var result : MutableList<Result>
@@ -64,36 +72,25 @@ class MainActivity : AppCompatActivity(),  RecyclerAdapter.OnItemClickListener {
                 CurrentLocation.raddouble = Integer.parseInt(getter) * 1609.344
                 val type = spinner.selectedItem.toString()
                 val api : GoogleAPI = APIClient.getClient().create(GoogleAPI::class.java)
-                api.getNearby(CurrentLocation.current, CurrentLocation.raddouble, type,"AIzaSyBomoHX1r4nKmQb48FQHt4v0WGGc4hsay0").enqueue(
-                    object : retrofit2.Callback<PlacesResults> {
-                        override fun onResponse(call: Call<PlacesResults>, response: Response<PlacesResults>) {
-                            if(response.isSuccessful){
-                                result = response.body()!!.getResults()
-                                for (i in result.indices){
-                                    CurrentLocation.getlatlist().add(result[i].getGeometry().getLocation().getLatitude())
-                                    CurrentLocation.getlonglist().add(result[i].getGeometry().getLocation().getLongitude())
-                                    val dis=getDistance(result[i].getGeometry().getLocation().getLatitude(),result[i].getGeometry().getLocation().getLongitude())
-                                    val miles : Int = (dis * 0.000621371192).toInt()+1
-                                    result[i].getGeometry().setDistance(miles)
-                                    if(result[i].getOpening()?.getOpenNow()==null){
-                                        result.removeAt(i)
-                                    }
-
-                                }
-                                adapter = RecyclerAdapter(applicationContext, result)
-                                recycl.adapter = adapter
-                                adapter.setOnItemClickListener(this@MainActivity)
-
-                            }else{
+                api.getNearby(CurrentLocation.current, CurrentLocation.raddouble, type,"AIzaSyBomoHX1r4nKmQb48FQHt4v0WGGc4hsay0")
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe {
+                        result = it.getResults()
+                        for (i in result.indices){
+                            CurrentLocation.getlatlist().add(result[i].getGeometry().getLocation().getLatitude())
+                            CurrentLocation.getlonglist().add(result[i].getGeometry().getLocation().getLongitude())
+                            val dis=getDistance(result[i].getGeometry().getLocation().getLatitude(),result[i].getGeometry().getLocation().getLongitude())
+                            val miles : Int = (dis * 0.000621371192).toInt()+1
+                            result[i].getGeometry().setDistance(miles)
+                            if(result[i].getOpening()?.getOpenNow() ==null){
+                                result.removeAt(i)
                             }
                         }
-                        override fun onFailure(call: Call<PlacesResults>, t: Throwable) {
-
-                        }
-
+                        adapter = RecyclerAdapter(applicationContext, result)
+                        recycl.adapter = adapter
+                        adapter.setOnItemClickListener(this@MainActivity)
                     }
-
-                )
             }
             val alert = build.create()
             alert.show()
@@ -132,34 +129,25 @@ class MainActivity : AppCompatActivity(),  RecyclerAdapter.OnItemClickListener {
                 }
                 val type = spinner.selectedItem.toString()
                 val api : GoogleAPI = APIClient.getClient().create(GoogleAPI::class.java)
-                api.getNearby(CurrentLocation.current, CurrentLocation.raddouble, type,"AIzaSyBomoHX1r4nKmQb48FQHt4v0WGGc4hsay0").enqueue(
-                    object : retrofit2.Callback<PlacesResults> {
-                        override fun onResponse(call: Call<PlacesResults>, response: Response<PlacesResults>) {
-                            if(response.isSuccessful){
-                                result = response.body()!!.getResults()
-                                for (i in result.indices){
-                                    CurrentLocation.getlatlist().add(result[i].getGeometry().getLocation().getLatitude())
-                                    CurrentLocation.getlonglist().add(result[i].getGeometry().getLocation().getLongitude())
-                                    val dis=getDistance(result[i].getGeometry().getLocation().getLatitude(),result[i].getGeometry().getLocation().getLongitude())
-                                    val miles : Int = (dis * 0.000621371192).toInt()+1
-                                    result[i].getGeometry().setDistance(miles)
-                                    if(result[i].getOpening()?.getOpenNow()==null){
-                                        result.removeAt(i)
-                                    }
-                                }
-                                adapter = RecyclerAdapter(applicationContext, result)
-                                recycl.adapter = adapter
-                                adapter.setOnItemClickListener(this@MainActivity)
-
+                api.getNearby(CurrentLocation.current, CurrentLocation.raddouble, type,"AIzaSyBomoHX1r4nKmQb48FQHt4v0WGGc4hsay0")
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe{
+                        result = it.getResults()
+                        for (i in result.indices){
+                            CurrentLocation.getlatlist().add(result[i].getGeometry().getLocation().getLatitude())
+                            CurrentLocation.getlonglist().add(result[i].getGeometry().getLocation().getLongitude())
+                            val dis=getDistance(result[i].getGeometry().getLocation().getLatitude(),result[i].getGeometry().getLocation().getLongitude())
+                            val miles : Int = (dis * 0.000621371192).toInt()+1
+                            result[i].getGeometry().setDistance(miles)
+                            if(result[i].getOpening()?.getOpenNow() ==null){
+                                result.removeAt(i)
                             }
                         }
-                        override fun onFailure(call: Call<PlacesResults>, t: Throwable) {
-
-                        }
-
+                        adapter = RecyclerAdapter(applicationContext, result)
+                        recycl.adapter = adapter
+                        adapter.setOnItemClickListener(this@MainActivity)
                     }
-
-                )
             }
 
         }
@@ -180,6 +168,7 @@ class MainActivity : AppCompatActivity(),  RecyclerAdapter.OnItemClickListener {
 
         }
 
+        @SuppressLint("CheckResult")
         override fun onLocationChanged(location: Location?) {
             CurrentLocation.current = location!!.latitude.toString() + "," + location.longitude.toString() //current location
             CurrentLocation.latitude = location.latitude
@@ -191,39 +180,35 @@ class MainActivity : AppCompatActivity(),  RecyclerAdapter.OnItemClickListener {
             }
             val type = spinner.selectedItem.toString()
             val api : GoogleAPI = APIClient.getClient().create(GoogleAPI::class.java)
-            api.getNearby(CurrentLocation.current, CurrentLocation.raddouble, type,"AIzaSyBomoHX1r4nKmQb48FQHt4v0WGGc4hsay0").enqueue(
-                object : retrofit2.Callback<PlacesResults> {
-                    override fun onResponse(call: Call<PlacesResults>, response: Response<PlacesResults>) {
-                        if(response.isSuccessful){
-                            result = response.body()!!.getResults()
-                            for (i in result.indices){
-                                CurrentLocation.getlatlist().add(result[i].getGeometry().getLocation().getLatitude())
-                                CurrentLocation.getlonglist().add(result[i].getGeometry().getLocation().getLongitude())
-                                val dis=getDistance(result[i].getGeometry().getLocation().getLatitude(),result[i].getGeometry().getLocation().getLongitude())
-                                val miles : Int = (dis * 0.000621371192).toInt()+1
-                                result[i].getGeometry().setDistance(miles)
-                                if(result[i].getOpening()?.getOpenNow() ==null){
-                                    result.removeAt(i)
-                                }
-                            }
-                            adapter = RecyclerAdapter(applicationContext, result)
-                            recycl.adapter = adapter
-                            adapter.setOnItemClickListener(this@MainActivity)
-                        }else{
+            api.getNearby(CurrentLocation.current, CurrentLocation.raddouble, type,"AIzaSyBomoHX1r4nKmQb48FQHt4v0WGGc4hsay0")
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({
+                    result = it.getResults()
+                    for (i in result.indices){
+                        CurrentLocation.getlatlist().add(result[i].getGeometry().getLocation().getLatitude())
+                        CurrentLocation.getlonglist().add(result[i].getGeometry().getLocation().getLongitude())
+                        val dis=getDistance(result[i].getGeometry().getLocation().getLatitude(),result[i].getGeometry().getLocation().getLongitude())
+                        val miles : Int = (dis * 0.000621371192).toInt()+1
+                        result[i].getGeometry().setDistance(miles)
+                        if(result[i].getOpening()?.getOpenNow() ==null){
+                            result.removeAt(i)
                         }
                     }
-                    override fun onFailure(call: Call<PlacesResults>, t: Throwable) {
-                    }
+                    adapter = RecyclerAdapter(applicationContext, result)
+                    recycl.adapter = adapter
+                    adapter.setOnItemClickListener(this@MainActivity)
+                }, {
 
-                }
-            )
+                })
+
         }
 
     }
     //asks to get your current location
     private fun googleApi() {
         if(ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
-        || ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED){
+            || ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED){
             location = getSystemService(LOCATION_SERVICE) as LocationManager
             location.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2*1000,1f, listener)
         }else{
@@ -235,16 +220,7 @@ class MainActivity : AppCompatActivity(),  RecyclerAdapter.OnItemClickListener {
             }
         }
     }
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if(requestCode==12 || requestCode==13){
-            if(ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
-                || ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED){
-                location = getSystemService(LOCATION_SERVICE) as LocationManager
-                location.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2*1000,1f, listener)
-            }
-        }
-    }
+
     private fun showData(){
         val type : MutableList<String> = mutableListOf()
         type.add("restaurant")

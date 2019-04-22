@@ -1,6 +1,5 @@
 package com.mycode.restuarantapp.entities
 
-import android.support.annotation.IntegerRes
 import com.google.gson.annotations.SerializedName
 import java.io.Serializable
 

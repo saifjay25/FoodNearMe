@@ -79,13 +79,11 @@ class RecyclerAdapter(con: Context, result: List<Result>) :RecyclerView.Adapter<
                 p0.open.text = close
             }
         }
-        val price= "Price Level: "
-        val rate= "Rating: "
-        val distance = "Estimated distance in miles: "
+        val price= "Price is: "
         p0.title.text = res.getname()
         p0.price.text = price+res.getPrice().toString()
-        p0.rating.text = rate+res.getRating().toString()
-        p0.distance.text = distance+res.getGeometry().getDistance().toString()
+        p0.rating.text = res.getRating().toString()
+        p0.distance.text = res.getGeometry().getDistance().toString()
     }
 
 
